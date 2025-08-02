@@ -132,7 +132,7 @@ export class OpenaiService {
 
       // Extract the content from the response
       const [content] = completion.choices.map(
-        (choice) => choice.message.content??'',
+        (choice) => choice.message.content ?? '',
       );
 
       return content;
@@ -142,4 +142,27 @@ export class OpenaiService {
       throw new ServiceUnavailableException('Unable to recognize image');
     }
   }
+
+ async generateImage(text: string): Promise<string> {
+  try {
+    const response = await this.openai.images.generate({
+      model: 'dall-e-3',
+      prompt: text,
+      response_format: 'url',
+    });
+
+    const data = response?.data;
+    const imageUrl = data?.[0]?.url;
+
+    if (!imageUrl) {
+      throw new Error('Image URL is undefined');
+    }
+
+    return imageUrl;
+  } catch (e) {
+    console.error(e);
+    throw new ServiceUnavailableException('Failed to generate image');
+  }
+}
+
 }
