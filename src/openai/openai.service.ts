@@ -83,4 +83,63 @@ export class OpenaiService {
       throw new ServiceUnavailableException('Failed to synthesize speech');
     }
   }
+
+  async transcribeAudio(
+    audioBuffer: Buffer,
+    language: string,
+  ): Promise<string> {
+    // Convert the audio buffer to a file object
+    const blob = new Blob([audioBuffer], {
+      type: 'audio/wav',
+    });
+    const file = new File([blob], 'input.wav', { type: 'audio/wav' });
+
+    try {
+      // Make a request to the Whisper model for audio transcription
+      const whisperResponse = await this.openai.audio.transcriptions.create({
+        model: 'whisper-1',
+        language,
+        file,
+        response_format: 'json',
+      });
+
+      // Return the transcribed text
+      return whisperResponse.text;
+    } catch (e) {
+      // Log and propagate the error
+      console.error(e);
+      throw new ServiceUnavailableException('Failed to transcribe audio');
+    }
+  }
+
+  async chatGptVision(text: string, url: string): Promise<string> {
+    try {
+      // Make a request to the ChatGPT Vision model
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4-vision-preview',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text },
+              { type: 'image_url', image_url: { url, detail: 'high' } },
+            ],
+          },
+        ],
+        temperature: 0.5,
+        max_tokens: 1000,
+      });
+
+      // Extract the content from the response
+      const [content] = completion.choices.map(
+        (choice) => choice.message.content??'',
+      );
+
+      return content;
+    } catch (e) {
+      // Log and propagate the error
+      console.error(e);
+      throw new ServiceUnavailableException('Unable to recognize image');
+    }
+  }
 }
