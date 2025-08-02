@@ -54,4 +54,33 @@ export class OpenaiService {
       throw new ServiceUnavailableException('Failed request to ChatGPT');
     }
   }
+
+  async synthesizeSpeech(userId: number, text: string): Promise<string> {
+    try {
+      // 1. Call OpenAI TTS API
+      const ttsResponse = await this.openai.audio.speech.create({
+        input: text,
+        model: 'tts-1-hd',
+        voice: 'alloy',
+      });
+
+      // 2. Convert response to array buffer
+      const arrayBuffer = await ttsResponse.arrayBuffer();
+      const audioBuffer = Buffer.from(arrayBuffer);
+
+      // 3. Upload to Supabase
+      const filename = await this.supabaseService.uploadAudio(
+        userId,
+        audioBuffer,
+      );
+
+      // 4. Get public URL from Supabase
+      const audioUrl = await this.supabaseService.getUrl('audios', filename);
+
+      return audioUrl;
+    } catch (e) {
+      console.error(e);
+      throw new ServiceUnavailableException('Failed to synthesize speech');
+    }
+  }
 }

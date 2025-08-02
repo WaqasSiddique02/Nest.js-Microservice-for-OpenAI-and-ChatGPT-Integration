@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class SupabaseService implements OnModuleInit {
@@ -38,5 +39,34 @@ export class SupabaseService implements OnModuleInit {
       throw new Error(`Supabase insert error: ${error.message}`);
     }
     return data;
+  }
+
+  async uploadAudio(userId: number, buffer: Buffer): Promise<string> {
+    const filename = `${userId}/${uuidv4()}.mp3`;
+
+    const { error } = await this.supabaseClient.storage
+      .from('audios')
+      .upload(filename, buffer, {
+        contentType: 'audio/mpeg',
+        upsert: true,
+      });
+
+    if (error) {
+      throw new Error('Failed to upload audio: ' + error.message);
+    }
+
+    return filename;
+  }
+
+  async getUrl(bucket: string, path: string): Promise<string> {
+    const { data } = this.supabaseClient.storage
+      .from(bucket)
+      .getPublicUrl(path);
+
+    if (!data.publicUrl) {
+      throw new Error('Failed to generate public URL');
+    }
+
+    return data.publicUrl;
   }
 }
