@@ -31,7 +31,7 @@ export class OpenaiService {
       // Make a request to the ChatGPT model
       const completion: ChatCompletion =
         await this.openai.chat.completions.create({
-          model: 'gpt-4',
+          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'system',
@@ -116,7 +116,7 @@ export class OpenaiService {
     try {
       // Make a request to the ChatGPT Vision model
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-3.5-turbo-vision-preview',
         messages: [
           {
             role: 'user',
@@ -143,26 +143,25 @@ export class OpenaiService {
     }
   }
 
- async generateImage(text: string): Promise<string> {
-  try {
-    const response = await this.openai.images.generate({
-      model: 'dall-e-3',
-      prompt: text,
-      response_format: 'url',
-    });
+  async generateImage(text: string): Promise<string> {
+    try {
+      const response = await this.openai.images.generate({
+        model: 'dall-e-3',
+        prompt: text,
+        response_format: 'url',
+      });
 
-    const data = response?.data;
-    const imageUrl = data?.[0]?.url;
+      const data = response?.data;
+      const imageUrl = data?.[0]?.url;
 
-    if (!imageUrl) {
-      throw new Error('Image URL is undefined');
+      if (!imageUrl) {
+        throw new Error('Image URL is undefined');
+      }
+
+      return imageUrl;
+    } catch (e) {
+      console.error(e);
+      throw new ServiceUnavailableException('Failed to generate image');
     }
-
-    return imageUrl;
-  } catch (e) {
-    console.error(e);
-    throw new ServiceUnavailableException('Failed to generate image');
   }
-}
-
 }
