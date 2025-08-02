@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OpenaiService } from './openai.service';
 import { SupabaseService } from 'src/supabase/supabase.service';
+import { OpenaiController } from './openai.controller';
 import OpenAI from 'openai';
 
 @Module({
@@ -17,5 +18,6 @@ import OpenAI from 'openai';
     },
   ],
   exports: [OpenaiService],
+  controllers: [OpenaiController],
 })
 export class OpenaiModule {}
